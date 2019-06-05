@@ -27,7 +27,6 @@ function print_output_line()
 {
     # Put the output of ps in an array of comma sepereted values
     ps_data=( $(ps --no-headers -eLo "pgrp,rssize,vsize,%mem,%cpu" | grep "^ *$PGROUP " | sed 's/ * /,/g') )
-    
     thread_count=${#ps_data[*]}
     fd_array=( /proc/$PID/fd/* )
     fd_count=${#fd_array[*]}
@@ -40,7 +39,7 @@ function print_output_line()
     done
     cpu_usage=$(echo "$bc_input" | bc)
 
-    # Write an output line 
+    # Write an output line
     line=${ps_data[0]}
     line=( ${line//,/ } )
     echo $(date "+%Y/%m/%d %H:%M:%S"),${line[1]},${line[2]},${line[3]},$cpu_usage,$thread_count,$fd_count
