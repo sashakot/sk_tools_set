@@ -109,8 +109,6 @@ function dump_stack()
     local pid=$1
     local pgroup=$2
 
-    has_pstack || return
-
     local rss=( $(ps --no-headers -eLo "pgrp,rssize" | grep "^ *$pgroup " | awk '{print$2}' ) )
 
     if (( $rss > $RSS )); then
