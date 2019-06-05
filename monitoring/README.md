@@ -1,4 +1,4 @@
-# Simple script for memory and CPU usage server_counters.sh
+# server_counters.sh  Simple script for memory and CPU usage monitoring 
 
 The script creates monitors CPU and memory usage for a process and reports result in CSV format
 
