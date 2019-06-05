@@ -2,7 +2,9 @@
 
 # PID, INTERVAL, RSS are integers
 declare -i PID INTERVAL RSS
+BASE_NAME=$(basename $0)
 PNAME=
+LOG_DIR=${LOG_DIR:-/tmp}
 RSS=$((0)) # Current RSS max
 
 if  [[ "$1" =~ ^[0-9]+$ ]];then
@@ -19,52 +21,36 @@ if [[ -z $PID ]]; then
 fi
 
 INTERVAL=${2:-10}
-LOG_DIR=${3:-/tmp}
-
-echo "$PID $PNAME $INTERVAL"
-
-BASE_NAME=$(basename $0)
 
 usage()
 {
 	echo "$BASE_NAME helps to system administrator to monitor CPU and memory usage"
 	echo ""
 	echo "Usage: $BASE_NAME <PID|process name> <interval in sec>"
-	echo " Examples:"
+	echo " In case of PID, the script dumps statistics while the process is up."
+	echo " If case of process name, the script runs endless and dumps statistics even if the application was restarted."
+	echo " The script monitors RSS. If it's growing, $BASE_NAME dumps zipped stack in $LOG_DIR folder."
+	echo "Examples:"
+	echo " $BASE_NAME opensm"
+	echo " $BASE_NAME \`pgrep opensm\` 10"
+	echo "Configuration:"
+	echo " LOG_DIR - Directory for stack dumps"
+	echo "Output:"
+	echo "  timestamp,rssize (private),vsize (virtual),%mem,%cpu,thread#,fd#"
+	echo "  timestamp : Time stamp"
+	echo "  rssize (private) : Resident set size (RSS) in KB, is the portion of memory occupied by a process that is held in main memory (RAM)"
+	echo "  vsize (virtual) : total VM size in kB. It includes all memory that the process can access including swapped and shared memory"
+	echo "  %mem : ratio of the process's resident set size to the physical memory on the machine, expressed as a percentage"
+	echo "  %cpu : CPU usage in percentage, including all threads."
+	echo "  thread#: Number of running threads"
+	echo "  fd#: Number of opened file descriptors"
+	echo "Dependency:"
+	echo " pstack, gzip"
+	echo "Unpack stack file:"
+	echo " gunzip -c $LOG_DIR/6996.2019_06_05__18_44_04.stack.gz"
 
 	exit 2
 }
-
-#while :; do
-#	case $1 in
-#		-h|--help)
-#			usage    # Display a usage synopsis.
-#			;;
-#		-p|--pid)       # Takes an option argument; ensure it has been specified.
-#			if [ "$2" ]; then
-#				PID=$2
-#				shift
-#			else
-#				echo 'ERROR: "-p | --pid" requires a non-empty option argument.'
-#				usage
-#			fi
-#			;;
-#		-v|--verbose)
-#			verbose=$((verbose + 1))  # Each -v adds 1 to verbosity.
-#			;;
-#		--)              # End of all options.
-#			shift
-#			break
-#			;;
-#		-?*)
-#			printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
-#			;;
-#		*)               # Default case: No more options, so break out of the loop.
-#			break
-#	esac
-#
-#	shift
-#done
 
 # Make sure we got all the required arguments
 if [[ $INTERVAL == 0 ]]; then
@@ -111,11 +97,19 @@ function print_output_line()
     echo $(date "+%Y/%m/%d %H:%M:%S"),${line[1]},${line[2]},${line[3]},$cpu_usage,$thread_count,$fd_count
 }
 
+function has_pstack()
+{
+	pstack  > /dev/null 2>&1
+	return $?
+}
+
 # Dump stack if rss growths
 function dump_stack()
 {
     local pid=$1
     local pgroup=$2
+
+    has_pstack || return
 
     local rss=( $(ps --no-headers -eLo "pgrp,rssize" | grep "^ *$pgroup " | awk '{print$2}' ) )
 
