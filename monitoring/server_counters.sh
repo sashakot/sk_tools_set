@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Both PID and INTERVAL are intergers
-declare -i PID INTERVALi
+declare -i PID INTERVAL
 
 PID=$1
 INTERVAL=$2
