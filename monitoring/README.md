@@ -10,12 +10,12 @@ The script creates monitors CPU and memory usage for a process and reports resul
 
 ## Examples
 
-`` bash
+``` bash
 $ ./server_counters.sh `pgrep opensm` 10
 timestamp,rssize (private),vsize (virtual),%mem,%cpu,thread#,fd#
 2019/06/05 04:13:40,5572,1097004,0.0,0,35,1
 2019/06/05 04:13:50,5572,1097004,0.0,0,35,1
-``
+```
 
 ## Description
 
